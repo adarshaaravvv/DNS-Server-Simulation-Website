@@ -411,6 +411,8 @@ body {
 
 .dns-input {
   flex: 1;
+  min-width: 0;
+  width: 100%;
   background: transparent;
   border: none;
   outline: none;
