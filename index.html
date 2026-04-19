@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DNS Server | IP ↔ Domain Lookup System</title>
+  <meta name="description"
+    content="Interactive DNS Server implementing IP-to-domain and domain-to-IP conversion using client-server architecture." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- Background -->
+  <div class="bg-grid"></div>
+  <div class="particles" id="particles"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="18" stroke="url(#lg1)" stroke-width="2" />
+            <circle cx="20" cy="20" r="4" fill="url(#lg1)" />
+            <line x1="20" y1="2" x2="20" y2="38" stroke="url(#lg1)" stroke-width="1.5" stroke-dasharray="3 3" />
+            <line x1="2" y1="20" x2="38" y2="20" stroke="url(#lg1)" stroke-width="1.5" stroke-dasharray="3 3" />
+            <ellipse cx="20" cy="20" rx="10" ry="18" stroke="url(#lg1)" stroke-width="1.5" />
+            <defs>
+              <linearGradient id="lg1" x1="2" y1="2" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6366f1" />
+                <stop offset="1" stop-color="#06b6d4" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">DNS<span class="accent">Server</span></span>
+          <span class="logo-sub">Client–Server Architecture</span>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#lookup" class="nav-link active" onclick="setActiveNav(this)">Lookup</a>
+        <a href="#records" class="nav-link" onclick="setActiveNav(this)">Records</a>
+        <a href="#architecture" class="nav-link" onclick="setActiveNav(this)">Architecture</a>
+      </nav>
+      <div class="server-status" id="serverStatus">
+        <span class="status-dot"></span>
+        <span>Server Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Computer Networks Project
+    </div>
+    <h1 class="hero-title">
+      Domain Name System
+      <span class="gradient-text">Server Simulator</span>
+    </h1>
+    <p class="hero-desc">
+      Experience a fully interactive DNS server implementing forward (domain → IP) and reverse (IP → domain)
+      lookups using a client-server architecture with real-time query logging.
+    </p>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       LOOKUP SECTION — side-by-side with live log
+  ════════════════════════════════════════════════ -->
+  <section class="section" id="lookup">
+    <div class="section-header">
+      <h2 class="section-title">DNS Lookup Console</h2>
+      <p class="section-sub">Query the DNS server — watch the live server log update in real-time on the right</p>
+    </div>
+
+    <!-- TWO-COLUMN layout -->
+    <div class="console-layout">
+
+      <!-- LEFT: Lookup cards + flow viz -->
+      <div class="console-left">
+        <div class="lookup-grid">
+
+          <!-- Forward DNS -->
+          <div class="card lookup-card" id="forwardCard">
+            <div class="card-badge forward-badge">Forward DNS</div>
+            <h3 class="card-title">Domain → IP Address</h3>
+            <p class="card-desc">Resolve a domain name to its corresponding IP address (A/AAAA Record lookup).</p>
+            <div class="input-group">
+              <div class="input-icon">🌐</div>
+              <input type="text" id="domainInput" class="dns-input" placeholder="e.g. google.com"
+                autocomplete="off" spellcheck="false" />
+              <button class="btn btn-primary" id="forwardBtn" onclick="forwardLookup()">
+                <span>Resolve</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+            <div class="suggestions" id="domainSuggestions"></div>
+            <div class="result-box" id="forwardResult"></div>
+          </div>
+
+          <!-- Reverse DNS -->
+          <div class="card lookup-card" id="reverseCard">
+            <div class="card-badge reverse-badge">Reverse DNS</div>
+            <h3 class="card-title">IP Address → Domain</h3>
+            <p class="card-desc">Perform a reverse lookup to find the domain name associated with an IP address.</p>
+            <div class="input-group">
+              <div class="input-icon">🔢</div>
+              <input type="text" id="ipInput" class="dns-input" placeholder="e.g. 142.250.80.46"
+                autocomplete="off" spellcheck="false" />
+              <button class="btn btn-secondary" id="reverseBtn" onclick="reverseLookup()">
+                <span>Resolve</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+            <div class="suggestions" id="ipSuggestions"></div>
+            <div class="result-box" id="reverseResult"></div>
+          </div>
+        </div>
+
+        <!-- Flow Viz -->
+        <div class="card flow-card" id="flowCard" style="display:none; margin-top:1rem;">
+          <h4 class="flow-title">Query Resolution Path</h4>
+          <div class="flow-steps" id="flowSteps"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Live log panel (always visible) -->
+      <div class="console-right">
+        <div class="inline-log">
+          <div class="inline-log-header">
+            <div class="terminal-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="terminal-title">dns-server.log</span>
+            <div class="log-live-badge">
+              <span class="status-dot"></span> LIVE
+            </div>
+            <button class="btn-icon" title="Clear logs" onclick="clearLogs()" style="margin-left:auto;">🗑️</button>
+          </div>
+          <div class="inline-log-body" id="logBody">
+            <div class="log-line system">[SYSTEM] DNS Server started on 0.0.0.0:53</div>
+            <div class="log-line system">[SYSTEM] Zone file loaded — 24 records</div>
+            <div class="log-line system">[SYSTEM] Awaiting client queries...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DNS Records Table -->
+  <section class="section" id="records">
+    <div class="section-header">
+      <h2 class="section-title">DNS Records Database</h2>
+      <p class="section-sub">Zone file — all records stored on the DNS server</p>
+      <div class="records-controls">
+        <input type="text" id="recordSearch" class="search-input" placeholder="🔍  Filter records..."
+          oninput="filterRecords()" />
+        <select id="recordTypeFilter" class="filter-select" onchange="filterRecords()">
+          <option value="ALL">All Types</option>
+          <option value="A">A Record</option>
+          <option value="AAAA">AAAA Record</option>
+          <option value="CNAME">CNAME</option>
+          <option value="MX">MX Record</option>
+          <option value="NS">NS Record</option>
+          <option value="PTR">PTR Record</option>
+        </select>
+        <button class="btn btn-add" onclick="openAddModal()">+ Add Record</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="dns-table" id="dnsTable">
+        <thead>
+          <tr>
+            <th>Domain Name</th>
+            <th>Type</th>
+            <th>Value (IP / Target)</th>
+            <th>TTL</th>
+            <th>Class</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="recordsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Architecture Section -->
+  <section class="section" id="architecture">
+    <div class="section-header">
+      <h2 class="section-title">System Architecture</h2>
+      <p class="section-sub">How the client–server DNS system works</p>
+    </div>
+    <div class="arch-grid">
+      <div class="arch-diagram">
+        <div class="arch-node client-node">
+          <div class="arch-icon">💻</div>
+          <strong>DNS Client</strong>
+          <span>Sends query<br />Port: 1024+</span>
+        </div>
+        <div class="arch-arrow">
+          <div class="arrow-label">UDP Port 53<br /><small>Query Request</small></div>
+          <div class="arch-line">
+            <div class="packet" id="pkt1"></div>
+          </div>
+        </div>
+        <div class="arch-node resolver-node">
+          <div class="arch-icon">🔀</div>
+          <strong>Recursive Resolver</strong>
+          <span>Checks cache<br />Forwards query</span>
+        </div>
+        <div class="arch-arrow">
+          <div class="arrow-label">Cache Miss<br /><small>Root Query</small></div>
+          <div class="arch-line">
+            <div class="packet" id="pkt2"></div>
+          </div>
+        </div>
+        <div class="arch-node server-node">
+          <div class="arch-icon">🖥️</div>
+          <strong>DNS Server</strong>
+          <span>Authoritative<br />Zone: root</span>
+        </div>
+      </div>
+      <div class="arch-steps">
+        <div class="step-item">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h4>Client Query</h4>
+            <p>The client application sends a DNS query over UDP (port 53) or TCP for large responses. The query
+              contains the domain name and requested record type (A, AAAA, PTR, etc.).</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h4>Recursive Resolution</h4>
+            <p>The recursive resolver checks its local cache. On a cache miss, it queries root servers → TLD servers →
+              authoritative servers in a hierarchical chain.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h4>Server Response</h4>
+            <p>The authoritative DNS server looks up its zone file and returns the resource record. The response
+              includes the IP address, TTL value, and record class.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h4>Cache &amp; Deliver</h4>
+            <p>The resolver caches the result for the TTL duration and forwards the answer to the client. Reverse lookup
+              (PTR) queries follow the same path in the in-addr.arpa zone.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Add Record Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add DNS Record</h3>
+        <button class="modal-close" onclick="closeAddModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Domain Name</label>
+          <input type="text" id="newDomain" class="dns-input" placeholder="e.g. mysite.com" />
+        </div>
+        <div class="form-group">
+          <label>Record Type</label>
+          <select id="newType" class="filter-select" style="width:100%">
+            <option value="A">A — IPv4 Address</option>
+            <option value="AAAA">AAAA — IPv6 Address</option>
+            <option value="CNAME">CNAME — Canonical Name</option>
+            <option value="MX">MX — Mail Exchange</option>
+            <option value="NS">NS — Name Server</option>
+            <option value="PTR">PTR — Pointer (Reverse)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Value (IP / Target)</label>
+          <input type="text" id="newValue" class="dns-input" placeholder="e.g. 93.184.216.34" />
+        </div>
+        <div class="form-group">
+          <label>TTL (seconds)</label>
+          <input type="number" id="newTTL" class="dns-input" value="300" min="1" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeAddModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="addRecord()">Add Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <footer class="footer">
+    <p>DNS Server Simulator &mdash; Computer Networks Project &copy; 2025</p>
+    <p class="footer-sub">Implements RFC 1034 &amp; RFC 1035 client–server architecture</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
