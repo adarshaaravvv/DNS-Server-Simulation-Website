@@ -35,5 +35,5 @@ Since this is a client-side simulator, no installation or compiling is required 
 - `style.css` - Stylesheets defining the visual look, grid layout, fonts, and micro-animations.
 - `script.js` - The JavaScript engine holding the mock `DNS_RECORDS` database and logic simulating network calls and logs.
 
-## Built By
+## Built By Adarsh Aarav and Claude for Google Stich for UI.
 Created for a Computer Networks curriculum to visually explain the concepts of Domain Name Systems.
